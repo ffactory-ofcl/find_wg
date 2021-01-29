@@ -31,15 +31,14 @@ class MatchPage extends StatefulWidget {
 }
 
 class _MatchPageState extends State<MatchPage> with TickerProviderStateMixin {
-  Size? _deviceSize;
+  late Size _deviceSize;
 
   late List<Card> matchCards;
   List<Card> likedCards = [];
   List<Card> dislikedCards = [];
 
-  double swipeAmount = 0;
   Point<double>? _dragStart;
-  // late AnimationController _controller;
+  late AnimationController _swipeController;
   late AnimationController _heartAnimationController;
 
   void _resetMatches() {
@@ -59,12 +58,13 @@ class _MatchPageState extends State<MatchPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // _controller = AnimationController(
-    //   duration: Duration(milliseconds: 500),
-    //   lowerBound: -1,
-    //   upperBound: 1,
-    //   vsync: this,
-    // );
+    _swipeController = AnimationController(
+      duration: Duration(milliseconds: 350),
+      lowerBound: -2,
+      upperBound: 2,
+      value: 0,
+      vsync: this,
+    );
     _heartAnimationController = AnimationController(
       duration: Duration(milliseconds: 200),
       vsync: this,
@@ -81,84 +81,114 @@ class _MatchPageState extends State<MatchPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    Matrix4 cardRotation = Matrix4.identity();
-    cardRotation.rotateZ((swipeAmount) * 0.1);
-
-    Matrix4 cardTransform = Matrix4.identity();
-    cardTransform.translate((swipeAmount) * (_deviceSize?.width ?? 0) * 0.6);
-    cardTransform.scale(1 - swipeAmount.abs() * 0.2);
-    if (_deviceSize == null) {
-      _deviceSize = MediaQuery.of(context).size;
-    }
+    _deviceSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: matchCards.length <= 1
-          ? Container(
-              child: Center(
-                child: Column(
-                  children: [
-                    Text("no cards"),
-                    RaisedButton(
-                        onPressed: () => setState(() => _resetMatches()),
-                        child: Text("reset"))
-                  ],
-                  mainAxisSize: MainAxisSize.min,
-                ),
-              ),
+      body: matchCards.length < 1
+          ? NoCardsLeftBackdrop(
+              resetMatches: () => setState(() => _resetMatches()),
             )
           : GestureDetector(
               onHorizontalDragStart: (details) {
                 _dragStart =
                     Point(details.globalPosition.dx, details.globalPosition.dy);
-                setState(() => swipeAmount = 0);
+                // setState(() =>
+                _swipeController.value = 0;
               },
               onHorizontalDragEnd: (details) {
                 if (details.primaryVelocity!.abs() > 600 ||
-                    swipeAmount.abs() > 0.35) {
-                  if (swipeAmount < 0) {
+                    _swipeController.value.abs() > 0.35) {
+                  if (_swipeController.value < 0) {
                     likedCards.add(matchCards[0]);
                     _heartAnimationController.forward();
                   } else {
                     dislikedCards.add(matchCards[0]);
                   }
-                  matchCards.removeAt(0);
+                  _swipeController.animateTo(
+                    _swipeController.value > 0 ? 2 : -2,
+                    duration: Duration(
+                      milliseconds:
+                          (180 * (2 - _swipeController.value.abs())).toInt(),
+                    ),
+                  );
+                  Future.delayed(_swipeController.duration!, () {
+                    setState(() {
+                      _swipeController.value = 0;
+                      matchCards.removeAt(0);
+                    });
+                  });
+                } else {
+                  _swipeController.animateTo(0,
+                      duration: Duration(
+                          milliseconds:
+                              (350 * _swipeController.value.abs()).toInt()));
                 }
                 _dragStart = null;
-                // swipeAmount
-                setState(() => swipeAmount = 0);
+                // setState(() => swipeAmount = 0);
               },
               onHorizontalDragUpdate: (details) {
                 Point dragNow = Point(details.globalPosition.dx, _dragStart!.y);
-                setState(() => swipeAmount =
-                    (dragNow.x - _dragStart!.x) / (_deviceSize?.width ?? 0));
+                // setState(() =>
+                _swipeController.value =
+                    (dragNow.x - _dragStart!.x) / _deviceSize.width;
               },
               child: Stack(
                 children: [
-                  Container(color: Colors.black),
-                  Container(color: Colors.green[900]!.withOpacity(0.2)),
-                  Transform.scale(
-                    scale: 0.8 + (swipeAmount).abs() * 0.2,
-                    child: Opacity(
-                      opacity: 0.5,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: MatchCardWidget(matchCards[1], 0),
-                      ),
-                    ),
-                  ),
-                  Transform(
-                    transform: cardTransform,
-                    alignment: Alignment.center,
-                    child: Transform(
-                      transform: cardRotation,
-                      alignment: Alignment(0.0, 1.25),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8 *
-                            Curves.easeIn
-                                .transform(max(1, min(1, 4 * swipeAmount)))),
-                        child: MatchCardWidget(matchCards[0], swipeAmount),
-                      ),
-                    ),
+                  matchCards.length == 1
+                      ? SizedBox()
+                      : Container(color: Colors.black),
+                  matchCards.length == 1
+                      ? NoCardsLeftBackdrop(
+                          resetMatches: () => setState(() => _resetMatches()),
+                        )
+                      : AnimatedBuilder(
+                          animation: _swipeController,
+                          builder: (_, __) => Transform.scale(
+                            scale: 0.8 +
+                                Curves.easeOutQuad.transform(
+                                        min(1, _swipeController.value.abs())) *
+                                    0.2,
+                            child: Opacity(
+                              opacity: Curves.easeOutQuad.transform(
+                                  0.5 * _swipeController.value.abs()),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16 *
+                                    (1 - _swipeController.value.abs() * 0.5)),
+                                child: MatchCardWidget(matchCards[1], 0),
+                              ),
+                            ),
+                          ),
+                        ),
+                  AnimatedBuilder(
+                    animation: _swipeController,
+                    builder: (_, __) {
+                      Matrix4 cardRotation = Matrix4.identity();
+                      cardRotation.rotateZ((_swipeController.value) * 0.1);
+                      Matrix4 cardTransform = Matrix4.identity();
+                      cardTransform.translate(
+                          _swipeController.value * _deviceSize.width * 0.6);
+                      cardTransform.scale(
+                          1 - min(1, _swipeController.value.abs()) * 0.2);
+
+                      return Transform(
+                        transform: cardTransform,
+                        alignment: Alignment.center,
+                        child: Transform(
+                          transform: cardRotation,
+                          alignment: Alignment(0.0, 1.25),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8 *
+                                Curves.easeOutCubic.transform(min(1,
+                                    max(0, 4 * _swipeController.value.abs())))),
+                            child: MatchCardWidget(
+                                matchCards[0],
+                                (_swipeController.value > 0 ? 1 : -1) *
+                                    Curves.easeOutCubic.transform(
+                                        _swipeController.value.abs() * 0.5)),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   AnimatedBuilder(
                     animation: _heartAnimationController,
@@ -182,6 +212,30 @@ class _MatchPageState extends State<MatchPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class NoCardsLeftBackdrop extends StatelessWidget {
+  NoCardsLeftBackdrop({
+    Key? key,
+    required this.resetMatches,
+  }) : super(key: key);
+
+  final VoidCallback resetMatches;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Center(
+        child: Column(
+          children: [
+            Text("no cards"),
+            RaisedButton(onPressed: () => resetMatches(), child: Text("reset"))
+          ],
+          mainAxisSize: MainAxisSize.min,
+        ),
+      ),
     );
   }
 }
@@ -276,33 +330,34 @@ class MatchCardWidget extends StatelessWidget {
                       height: 80,
                       width: 80,
                     ),
-                    ClipRRect(
-                      child: OverflowBox(
-                        maxHeight: _phoneHeight,
-                        maxWidth: _phoneHeight,
-                        child: Container(
-                          height: _phoneHeight *
-                              0.7 *
-                              pow(
-                                  Curves.easeOutCubic
-                                      .transform(swipeAmount.abs()),
-                                  2),
-                          width: _phoneHeight *
-                              0.7 *
-                              pow(
-                                  Curves.easeOutCubic
-                                      .transform(swipeAmount.abs()),
-                                  2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color.lerp(
-                                Colors.grey[500],
-                                _overlayColor,
-                                Curves.easeInOutCirc.transform(
-                                    min(swipeAmount.abs() * 1.3, 1))),
-                          ),
+                    // ClipRRect(
+                    //   child:
+                    OverflowBox(
+                      maxHeight: _phoneHeight,
+                      maxWidth: _phoneHeight,
+                      child: Container(
+                        height: _phoneHeight *
+                            0.7 *
+                            pow(
+                                Curves.easeOutCubic
+                                    .transform(swipeAmount.abs()),
+                                2),
+                        width: _phoneHeight *
+                            0.7 *
+                            pow(
+                                Curves.easeOutCubic
+                                    .transform(swipeAmount.abs()),
+                                2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color.lerp(
+                              Colors.grey[500],
+                              _overlayColor,
+                              Curves.easeInOutCirc
+                                  .transform(min(swipeAmount.abs() * 1.3, 1))),
                         ),
                       ),
+                      // ),
                     ),
                     Opacity(
                       opacity: Curves.easeOut.transform(
