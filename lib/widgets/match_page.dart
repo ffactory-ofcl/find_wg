@@ -1,5 +1,5 @@
-import 'package:find_wg/model/card.dart';
-import 'package:find_wg/widgets/cardfeed_widget.dart';
+import 'package:roomride/model/card.dart';
+import 'package:roomride/widgets/cardfeed_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

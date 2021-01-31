@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart' hide Card;
-import 'package:find_wg/model/card.dart';
+import 'package:roomride/model/card.dart';
 
 class CardWidget extends StatefulWidget {
   final Card card;

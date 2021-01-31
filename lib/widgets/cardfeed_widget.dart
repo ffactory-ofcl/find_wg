@@ -1,8 +1,8 @@
 import 'dart:math';
-import 'package:find_wg/widgets/menu_bar.dart';
+import 'package:roomride/widgets/menu_bar.dart';
 import 'package:flutter/material.dart' hide Card;
 
-import 'package:find_wg/model/card.dart';
+import 'package:roomride/model/card.dart';
 import 'card_widget.dart';
 
 class CardsFeed extends StatefulWidget {

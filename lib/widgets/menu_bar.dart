@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart' hide Card;
 
-import 'package:find_wg/model/card.dart';
+import 'package:roomride/model/card.dart';
 
 class FloatingMenuBar extends StatefulWidget {
   final CardFeedProvider cardProvider;

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:find_wg/util/networkmanager.dart';
+import 'package:roomride/util/networkmanager.dart';
 import 'package:flutter/widgets.dart';
 
 enum Reaction { LIKE, DISLIKE, SKIP }

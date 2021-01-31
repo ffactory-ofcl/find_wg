@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:find_wg/model/card.dart';
-import 'package:find_wg/util/unsplash_adapter.dart';
+import 'package:roomride/model/card.dart';
+import 'package:roomride/util/unsplash_adapter.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
