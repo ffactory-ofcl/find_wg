@@ -1,16 +1,11 @@
-# find_wg
+# Roomride
 
-A new Flutter project.
+Web version available here: http://roomride.ffactory.ml/
 
-## Getting Started
+## Instructions
+I suggest using vs code with the flutter plugin to make running this project much easier.
+- switch to flutter dev branch using `flutter channel dev`
+- run using IDE or `flutter run`
+- swipe away :)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Author: Filippo Orru, 2021
