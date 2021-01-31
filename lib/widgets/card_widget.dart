@@ -130,22 +130,25 @@ class _CardWidgetState extends State<CardWidget>
                             _imageViewCtrl.page ?? 0,
                             widget.card.images.length),
                       ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(Icons.chevron_left,
-                                  color: Colors.white70, size: 32),
-                              Icon(Icons.chevron_right,
-                                  color: Colors.white70, size: 32)
-                            ],
-                          ),
-                        ),
-                      ),
+                      widget.card.images.length < 2
+                          ? SizedBox()
+                          : Align(
+                              alignment: Alignment.center,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Icon(Icons.chevron_left,
+                                        color: Colors.white70, size: 32),
+                                    Icon(Icons.chevron_right,
+                                        color: Colors.white70, size: 32)
+                                  ],
+                                ),
+                              ),
+                            ),
                     ],
                   ),
                 ),

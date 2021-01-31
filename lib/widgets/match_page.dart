@@ -18,7 +18,11 @@ class _MatchPageState extends State<MatchPage> {
     return Scaffold(
       body: Consumer<CardFeedProvider>(builder: (_, cardProvider, __) {
         // print("called consumer build");
-        return CardsFeed(cardProvider);
+        return Center(
+            child: Container(
+          child: CardsFeed(cardProvider),
+          constraints: BoxConstraints(maxWidth: 700),
+        ));
       }),
     );
   }
