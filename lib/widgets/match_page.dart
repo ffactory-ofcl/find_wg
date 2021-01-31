@@ -1,12 +1,10 @@
 import 'package:find_wg/model/card.dart';
 import 'package:find_wg/widgets/cardfeed_widget.dart';
-import 'package:find_wg/widgets/menu_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MatchPage extends StatefulWidget {
-  MatchPage({Key? key, this.title}) : super(key: key);
-
-  final String? title;
+  MatchPage({Key? key}) : super(key: key);
 
   @override
   _MatchPageState createState() => _MatchPageState();
@@ -18,7 +16,10 @@ class _MatchPageState extends State<MatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CardsFeed(cardProvider),
+      body: Consumer<CardFeedProvider>(builder: (_, cardProvider, __) {
+        // print("called consumer build");
+        return CardsFeed(cardProvider);
+      }),
     );
   }
 }

@@ -15,32 +15,44 @@ class CardsFeed extends StatefulWidget {
 }
 
 class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
-  void _reactedToCard({bool? positive}) {
+  void _reactedToCard({DragEndDetails? dragDetails, bool? likedForce}) {
+    assert((dragDetails == null) != (likedForce == null));
+
     double val = _swipeController.value;
-    if (positive != null) {
-      val = positive ? -0.1 : 0.1;
+    bool liked = likedForce ?? false;
+
+    if (dragDetails != null) {
+      bool wasSwipingLeft = dragDetails.velocity.pixelsPerSecond.dx < 0;
+      if (dragDetails.primaryVelocity!.abs() > 650) {
+        // was swiping
+        liked = wasSwipingLeft;
+      } else {
+        liked = val < 0;
+      }
     }
 
-    if (val < 0) {
+    Duration animationDuration = Duration(
+      milliseconds: (220 * (2 - val.abs())).toInt(),
+    );
+
+    if (liked) {
       _likeAnimationController.forward();
     } else {
       _dislikeAnimationController.forward();
     }
     _swipeController.animateTo(
-      val > 0 ? 2 : -2,
-      duration: Duration(
-        milliseconds: (180 * (2 - val.abs())).toInt(),
-      ),
+      liked ? -2 : 2,
+      duration: animationDuration,
     );
 
-    Future.delayed(_swipeController.duration!, () {
+    Future.delayed(animationDuration, () {
       setState(() {
-        val = 0;
         if (val < 0) {
           widget.cardProvider.like();
         } else {
           widget.cardProvider.dislike();
         }
+        _swipeController.value = 0;
       });
     });
   }
@@ -89,6 +101,8 @@ class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    print(
+        "build feed: images.len = ${widget.cardProvider.length} topmost: ${widget.cardProvider[0].title[0]}");
     _deviceSize = MediaQuery.of(context).size;
 
     return Stack(
@@ -106,7 +120,7 @@ class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
                 onHorizontalDragEnd: (details) {
                   if (details.primaryVelocity!.abs() > 600 ||
                       _swipeController.value.abs() > 0.35) {
-                    _reactedToCard();
+                    _reactedToCard(dragDetails: details);
                   } else {
                     _swipeController.animateTo(0,
                         duration: Duration(
@@ -222,15 +236,16 @@ class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
                       child: Container(
                           height: min(
                               250, MediaQuery.of(context).size.height * 0.3),
-                          child: AspectRatio(
-                              aspectRatio: 1,
+                          child: Container(
+                              height: 150,
+                              width: 150,
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   AnimatedBuilder(
                                     animation: _likeAnimationController,
                                     child: Image.asset(
-                                      "resources/img/icons8-heart-240.png",
+                                      "resources/img/like.png",
                                       fit: BoxFit.contain,
                                     ),
                                     builder: (ctx, widget) => IgnorePointer(
@@ -253,7 +268,7 @@ class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
                                   AnimatedBuilder(
                                     animation: _dislikeAnimationController,
                                     child: Image.asset(
-                                      "resources/img/icons8-dislike-80.png",
+                                      "resources/img/dislike.png",
                                       fit: BoxFit.contain,
                                     ),
                                     builder: (ctx, widget) => IgnorePointer(
@@ -286,8 +301,8 @@ class _CardsFeedState extends State<CardsFeed> with TickerProviderStateMixin {
           // right: 0,
           child: FloatingMenuBar(
             widget.cardProvider,
-            onLike: () => _reactedToCard(positive: true),
-            onDislike: () => _reactedToCard(positive: false),
+            onLike: () => _reactedToCard(likedForce: true),
+            onDislike: () => _reactedToCard(likedForce: false),
           ),
         )
       ],
